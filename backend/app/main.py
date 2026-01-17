@@ -1,36 +1,39 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.api.v1 import auth, leads, users
-from app.core.config import settings
-from app.db.session_sql import get_db
-from app.db.session_mongo import get_mongo_db
 from sqlalchemy.sql import text
 
-from .db.session_sql import engine, Base
-from .models import sql_models
+# Imports corregidos para la estructura interna de /app
+from app.api.v1 import auth, leads, users
+from app.core.config import settings
+from app.db.session_sql import get_db, engine # Importamos engine directamente de aquí
+from app.db.session_mongo import get_mongo_db
+from app.models import sql_models
 
-# Crear tablas en PostgreSQL al iniciar
-sql_models.Base.metadata.create_all(bind=engine)
-
+# 1. Definir la aplicación
 app = FastAPI(title=settings.PROJECT_NAME)
 
-# Configurar CORS
+# 2. Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción, usa una lista de dominios permitidos
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(leads.router, prefix="/api/v1/leads", tags=["leads"])
-app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
-
+# 3. Rutas principales
 @app.get("/")
 def read_root():
     return {"message": "Welcome to FastAPI Backend"}
+
+@app.get("/setup")
+async def setup_database():
+    try:
+        # Esto crea las tablas en Neon usando el engine importado
+        sql_models.Base.metadata.create_all(bind=engine)
+        return {"status": "success", "message": "Tablas creadas correctamente en Neon"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @app.get("/health")
 async def health_check(db = Depends(get_db)):
@@ -54,3 +57,8 @@ async def health_check(db = Depends(get_db)):
         "database_sql": sql_status,
         "database_mongo": mongo_status
     }
+
+# 4. Incluir Routers
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(leads.router, prefix="/api/v1/leads", tags=["leads"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
