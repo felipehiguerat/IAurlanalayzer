@@ -1,0 +1,33 @@
+﻿--- Starting Backend Integration Tests ---
+
+1. Testing Health Check...
+Status: 200
+Content: {"status":"active","database_sql":"OK","database_mongo":"OK"}
+Ô£à Health Check Passed (SQL & Mongo are connected)
+
+2. Testing Registration...
+Status: 200
+Ô£à Registration Passed (User ID: 4)
+
+3. Testing Login...
+Status: 200
+Ô£à Login Passed (Token received)
+
+4. Testing Lead Extraction...
+Status: 200
+Ô£à Lead Extraction Passed (Lead ID: 696a42bf6cd2fcb0ff933327)
+
+5. Testing Get Leads for User 4...
+Status: 200
+Ô£à Get User Leads Passed (Found 1 leads)
+
+6. Testing Get Stats for User 4...
+Status: 200
+Stats: {'New': 1}
+Ô£à Get User Stats Passed
+
+7. Testing Lead Deletion...
+Status: 200
+Ô£à Lead Deletion Passed
+
+--- All Tests Completed Successfully ---
