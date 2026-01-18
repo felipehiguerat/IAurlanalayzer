@@ -11,27 +11,27 @@ export interface BulkImportResponse {
 
 export const leadService = {
     extractLead: async (url: string) => {
-        const response = await api.post<Lead>('/leads/extract', { url });
+        const response = await api.post<Lead>('/api/v1/leads/extract', { url });
         return response.data;
     },
 
     getLeads: async () => {
-        const response = await api.get<Lead[]>('/leads/');
+        const response = await api.get<Lead[]>('/api/v1/leads/');
         return response.data;
     },
 
     deleteLead: async (id: string) => {
-        const response = await api.delete(`/leads/${id}`);
+        const response = await api.delete(`/api/v1/leads/${id}`);
         return response.data;
     },
 
     getLead: async (id: string) => {
-        const response = await api.get<Lead>(`/leads/${id}`);
+        const response = await api.get<Lead>(`/api/v1/leads/${id}`);
         return response.data;
     },
 
     bulkImport: async (urls: string[], owner_id: number = 1) => {
-        const response = await api.post<BulkImportResponse>('/leads/bulk-import', {
+        const response = await api.post<BulkImportResponse>('/api/v1/leads/bulk-import', {
             urls,
             owner_id
         });
@@ -39,9 +39,9 @@ export const leadService = {
     },
 
     exportCSV: async () => {
-        const response = await api.get('/leads/export/csv', {
+        const response = await api.get('/api/v1/leads/export/csv', {
             responseType: 'blob'
-        });
+        })
 
         // Create download link
         const url = window.URL.createObjectURL(new Blob([response.data]));
