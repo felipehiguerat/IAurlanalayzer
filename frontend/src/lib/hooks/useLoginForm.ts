@@ -33,7 +33,7 @@ export const useLoginForm = (): UseLoginFormReturn => {
         setError(null);
 
         try {
-            const response = await api.post('/auth/login', {
+            const response = await api.post('/api/v1/auth/login', {
                 email: formData.email,
                 password: formData.password
             });
@@ -72,3 +72,4 @@ export const useLoginForm = (): UseLoginFormReturn => {
         showPassword,
     };
 };
+
