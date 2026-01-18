@@ -9,6 +9,13 @@ export interface AuthResponse {
     token_type: string;
 }
 
+export interface MLAnalysis {
+    reasoning?: string;
+    key_findings?: string[];
+    sentiment?: string;
+    [key: string]: unknown;
+}
+
 export interface Lead {
     _id: string;
     url: string;
@@ -17,7 +24,7 @@ export interface Lead {
     owner_id: number;
     status: string;
     ml_score: number;
-    ml_analysis?: Record<string, unknown>;
+    ml_analysis?: MLAnalysis;
     created_at: string;
 }
 
