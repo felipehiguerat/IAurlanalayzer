@@ -44,7 +44,7 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
 
         try {
             // 1. Register
-            await api.post('/auth/register', {
+            await api.post('api/v1/auth/register', {
                 email: formData.email,
                 password: formData.password,
                 full_name: formData.fullName
@@ -89,3 +89,4 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
         showPassword,
     };
 };
+
