@@ -51,7 +51,7 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
             });
 
             // 2. Auto-login after register
-            const loginRes = await api.post('/auth/login', {
+            const loginRes = await api.post('api/v1/auth/login', {
                 email: formData.email,
                 password: formData.password
             });
@@ -89,4 +89,5 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
         showPassword,
     };
 };
+
 
