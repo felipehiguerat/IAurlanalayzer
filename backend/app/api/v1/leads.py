@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 from app.services.scraper_service import ScraperService
 from app.db.session_mongo import get_mongo_db
 from app.models.mongo_models import MongoLead
+from app.constants.sample_leads import SAMPLE_LEADS
 from datetime import datetime
 from bson import ObjectId
 from typing import List, Optional
@@ -65,13 +66,22 @@ async def list_leads(db = Depends(get_mongo_db)):
     async for document in cursor:
         document["_id"] = str(document["_id"])
         leads.append(document)
-    return leads
+    return leads + SAMPLE_LEADS
 
 @router.get("/{lead_id}")
 async def get_lead(lead_id: str, db = Depends(get_mongo_db)):
     """
-    Obtiene el detalle de un lead específico desde MongoDB.
+    Obtiene el detalle de un lead (real o de ejemplo).
     """
+    # 1. Verificar si es un ID de ejemplo
+    if lead_id.startswith("sample-"):
+        # Buscamos el objeto en nuestra lista de constantes
+        sample = next((item for item in SAMPLE_LEADS if item["_id"] == lead_id), None)
+        if not sample:
+            raise HTTPException(status_code=404, detail="Sample lead not found")
+        return sample
+
+    # 2. Si no es ejemplo, procedemos con la lógica normal de MongoDB
     if not ObjectId.is_valid(lead_id):
         raise HTTPException(status_code=400, detail="Invalid Lead ID format")
     
@@ -82,6 +92,7 @@ async def get_lead(lead_id: str, db = Depends(get_mongo_db)):
     lead["_id"] = str(lead["_id"])
     return lead
 
+    
 @router.delete("/{lead_id}")
 async def delete_lead(lead_id: str, db = Depends(get_mongo_db)):
     """
