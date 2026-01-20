@@ -5,8 +5,33 @@ from app.db.session_sql import get_db
 from app.models.sql_models import User
 from app.schemas.users import UserCreate, User as UserSchema
 from app.core import security
+from jose import jwt, JWTError
 
 router = APIRouter()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
+
+def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        # Decodificamos el token usando tu clave secreta
+        payload = jwt.decode(
+            token, security.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
+        user_id: str = payload.get("sub") # El login guarda el user.id en "sub"
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+        
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None:
+        raise credentials_exception
+    return user
 
 @router.post("/register", response_model=UserSchema)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):

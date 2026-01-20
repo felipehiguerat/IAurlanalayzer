@@ -13,14 +13,16 @@ import asyncio
 
 from app.services.ml_service import MLService
 from app.schemas.leads import BulkURLExtractRequest, BulkExtractResponse
+from app.api.v1.auth import get_current_user
 
 router = APIRouter()
 ml_service = MLService()
 
 @router.post("/extract")
-async def extract_lead(url: str = Body(..., embed=True), owner_id: int = Body(1), db = Depends(get_mongo_db)):
+async def extract_lead(url: str = Body(..., embed=True),  db = Depends(get_mongo_db),current_user = Depends(get_current_user) ):
     """
-    Scrapea una URL, la clasifica con NLP y la guarda en MongoDB.
+    Scrapea una URL, la clasifica con NLP y la guarda en MongoDB 
+    vinculada al ID real del usuario en Postgres.
     """
     async with ScraperService() as scraper:
         result = await scraper.scrape_url(url)
@@ -28,7 +30,7 @@ async def extract_lead(url: str = Body(..., embed=True), owner_id: int = Body(1)
         if "error" in result:
             raise HTTPException(status_code=400, detail=result["error"])
         
-        # Clasificación con ML (Bag of Words)
+        # Clasificación con ML
         title = result.get("title", "")
         description = result.get("description", "")
         classification = ml_service.classify_lead(title, description)
@@ -38,11 +40,12 @@ async def extract_lead(url: str = Body(..., embed=True), owner_id: int = Body(1)
             "url": url,
             "title": title,
             "description": description,
-            "owner_id": owner_id,
+            # IMPORTANTE: Ahora el owner_id es el ID real de Neon
+            "owner_id": current_user.id, 
             "content": {
                 "h1s": result.get("h1s")
             },
-            "status": classification["status"],  # "Hot", "Cold" o "Neutral"
+            "status": classification["status"],
             "ml_score": classification["score"],
             "ml_analysis": classification["analysis"],
             "created_at": datetime.utcnow()
@@ -56,39 +59,51 @@ async def extract_lead(url: str = Body(..., embed=True), owner_id: int = Body(1)
         
         return lead_data
 
+
 @router.get("/")
-async def list_leads(db = Depends(get_mongo_db)):
+async def list_leads(db = Depends(get_mongo_db), current_user = Depends(get_current_user)):
     """
     Lista todos los leads guardados en MongoDB.
     """
     leads = []
-    cursor = db.leads.find().sort("created_at", -1)
+    cursor = db.leads.find({"owner_id": current_user.id}).sort("created_at", -1)
     async for document in cursor:
         document["_id"] = str(document["_id"])
         leads.append(document)
     return leads + SAMPLE_LEADS
 
 @router.get("/{lead_id}")
-async def get_lead(lead_id: str, db = Depends(get_mongo_db)):
+async def get_lead(
+    lead_id: str, 
+    db = Depends(get_mongo_db), 
+    current_user = Depends(get_current_user) # Obtenemos el usuario autenticado
+):
     """
-    Obtiene el detalle de un lead (real o de ejemplo).
+    Obtiene el detalle de un lead específico, validando que pertenezca 
+    al usuario actual o sea un dato de ejemplo.
     """
-    # 1. Verificar si es un ID de ejemplo
+    # 1. Verificar si es un ID de ejemplo (Estos son públicos para todos)
     if lead_id.startswith("sample-"):
-        # Buscamos el objeto en nuestra lista de constantes
         sample = next((item for item in SAMPLE_LEADS if item["_id"] == lead_id), None)
         if not sample:
             raise HTTPException(status_code=404, detail="Sample lead not found")
         return sample
 
-    # 2. Si no es ejemplo, procedemos con la lógica normal de MongoDB
+    # 2. Validar formato de ID de MongoDB
     if not ObjectId.is_valid(lead_id):
         raise HTTPException(status_code=400, detail="Invalid Lead ID format")
     
-    lead = await db.leads.find_one({"_id": ObjectId(lead_id)})
-    if not lead:
-        raise HTTPException(status_code=404, detail="Lead not found")
+
+    lead = await db.leads.find_one({
+        "_id": ObjectId(lead_id),
+        "owner_id": current_user.id  # <-- SEGURIDAD: Solo lo encuentra si le pertenece
+    })
     
+    if not lead:
+        
+        raise HTTPException(status_code=404, detail="Lead not found or unauthorized")
+    
+    # 4. Preparar respuesta
     lead["_id"] = str(lead["_id"])
     return lead
 
