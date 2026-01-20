@@ -1,74 +1,79 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Icon } from '@/components/ui/Icon'; // Asegúrate de importar tu componente Icon
 import Link from 'next/link';
+import { Icon } from '@/components/ui/Icon';
+// Importamos la herramienta 3D
+import Spline from '@splinetool/react-spline';
 
 export default function NotFound() {
     const router = useRouter();
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-[#0B1121] overflow-hidden px-4">
+        <div className="relative w-full h-screen bg-[#0B1121] overflow-hidden flex flex-col lg:flex-row items-center justify-center">
             
-            {/* 1. Fondo Animado (Blobs de luz) */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[20%] left-[20%] w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] animate-pulse" />
-                <div className="absolute bottom-[20%] right-[20%] w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] animate-pulse delay-1000" />
+            {/* 1. Fondo decorativo sutil */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px]" />
             </div>
 
-            {/* 2. Tarjeta Central */}
-            <div className="relative z-10 glass-card p-10 md:p-14 rounded-3xl border border-white/10 flex flex-col items-center text-center max-w-lg shadow-2xl backdrop-blur-xl">
+            {/* 2. Sección de TEXTO (Izquierda) */}
+            <div className="relative z-10 flex-1 flex flex-col items-center lg:items-start text-center lg:text-left p-8 md:p-16 max-w-2xl">
                 
-                {/* Icono Animado */}
-                <div className="relative mb-8 group">
-                    <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl animate-ping opacity-75" />
-                    <div className="relative bg-white/5 border border-white/10 p-6 rounded-2xl shadow-inner">
-                        <Icon 
-                            name="smart_toy" 
-                            className="text-6xl text-emerald-400 animate-bounce" 
-                            style={{ animationDuration: '3s' }}
-                        />
-                    </div>
-                    
-                    {/* Pequeños iconos flotantes decorativos */}
-                    <Icon name="code" className="absolute -top-4 -right-4 text-slate-600 text-xl animate-spin-slow" />
-                    <Icon name="lock" className="absolute -bottom-2 -left-4 text-slate-600 text-xl" />
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-md">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="text-xs font-mono text-slate-300 tracking-widest uppercase">System Offline</span>
                 </div>
 
-                {/* Título y Texto */}
-                <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-4 tracking-tight">
-                    Demo Mode Only
+                <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-500 mb-6 tracking-tight">
+                    404 Error
                 </h1>
                 
-                <p className="text-slate-400 text-lg mb-8 leading-relaxed">
-                    ¡Ups! Esta página es solo una simulación. <br/>
-                    En un entorno de producción real, aquí verías documentación legal o configuraciones avanzadas.
+                <h2 className="text-2xl md:text-3xl font-bold text-emerald-400 mb-6">
+                    Intelligence Not Found
+                </h2>
+
+                <p className="text-slate-400 text-lg mb-10 leading-relaxed max-w-md">
+                    Parece que has llegado al límite de la simulación. <br/>
+                    El módulo que buscas es solo una demostración visual ("Mockup") y no existe en este servidor.
                 </p>
 
-                {/* Botones de Acción */}
-                <div className="flex flex-col sm:flex-row gap-4 w-full">
+                {/* Botones */}
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                     <button 
                         onClick={() => router.back()}
-                        className="flex-1 py-3 px-6 rounded-xl border border-white/10 text-slate-300 font-bold hover:bg-white/5 transition-all flex items-center justify-center gap-2 group"
+                        className="px-8 py-4 rounded-xl border border-white/10 text-white font-bold hover:bg-white/5 transition-all flex items-center justify-center gap-3 group backdrop-blur-sm"
                     >
                         <Icon name="arrow_back" className="group-hover:-translate-x-1 transition-transform" />
-                        Go Back
+                        <span>Go Back</span>
                     </button>
 
                     <Link 
                         href="/dashboard"
-                        className="flex-1 py-3 px-6 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 group"
+                        className="px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold hover:shadow-lg hover:shadow-emerald-500/25 transition-all flex items-center justify-center gap-3 group"
                     >
-                        Dashboard
+                        <span>Dashboard</span>
                         <Icon name="dashboard" className="group-hover:rotate-12 transition-transform" />
                     </Link>
                 </div>
             </div>
 
-            {/* Footer pequeño */}
-            <p className="absolute bottom-8 text-slate-600 text-xs font-mono uppercase tracking-widest opacity-50">
-                LeadGen AI Portfolio Project
-            </p>
+            {/* 3. Sección 3D (Derecha) - EL ROBOT */}
+            <div className="flex-1 w-full h-[50vh] lg:h-full relative lg:absolute lg:right-0 lg:top-0 z-0">
+                {/* 
+                   NOTA: Esta es una escena pública de Spline de un Robot. 
+                   Puedes cambiar la URL 'scene' por cualquier otra de la comunidad de Spline.
+                */}
+                <Spline 
+                    className="w-full h-full"
+                    scene="https://prod.spline.design/6Wq1Q7scSoxve8TO/scene.splinecode" 
+                />
+                
+                {/* Capa para ocultar el logo de Spline si aparece abajo a la derecha */}
+                <div className="absolute bottom-4 right-4 w-32 h-10 bg-[#0B1121] z-20 pointer-events-none" />
+            </div>
+
         </div>
     );
 }
