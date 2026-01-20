@@ -67,7 +67,7 @@ export default function NotFound() {
                 */}
                 <Spline 
                     className="w-full h-full"
-                    scene="https://prod.spline.design/6Wq1Q7scSoxve8TO/scene.splinecode" 
+                    scene="https://prod.spline.design/OSrYM4O-EhnULObM/scene.splinecode" 
                 />
                 
                 {/* Capa para ocultar el logo de Spline si aparece abajo a la derecha */}
