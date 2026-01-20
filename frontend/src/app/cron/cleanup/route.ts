@@ -1,18 +1,21 @@
-// Este es un "puente" que Vercel sí nos permite ejecutar
+import { NextResponse } from 'next/server';
+
 export async function GET() {
+  // Reemplaza con tu URL real de Render
   const RENDER_URL = "https://iaurlanalayzer.onrender.com/api/v1/admin/cleanup";
   
   try {
     const response = await fetch(RENDER_URL, {
       method: 'POST',
       headers: {
-        'x-admin-token': process.env.ADMIN_SECRET_KEY || 'tu_clave_aqui',
+        // Usa la clave que tienes en el .env de tu backend
+        'x-admin-token': process.env.ADMIN_SECRET_KEY || 'secret_key',
       },
     });
 
     const data = await response.json();
-    return Response.json({ success: true, data });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
-    return Response.json({ success: false, error: "Error llamando a Render" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Error calling Render" }, { status: 500 });
   }
 }
