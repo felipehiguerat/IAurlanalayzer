@@ -14,7 +14,7 @@ import asyncio
 from app.services.ml_service import MLService
 from app.schemas.leads import BulkURLExtractRequest, BulkExtractResponse
 # Importamos la seguridad para obtener el usuario real
-from app.api.auth import get_current_user
+from app.api.v1.auth import get_current_user
 
 router = APIRouter()
 ml_service = MLService()
