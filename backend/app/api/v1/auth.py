@@ -6,6 +6,7 @@ from app.models.sql_models import User
 from app.schemas.users import UserCreate, User as UserSchema
 from app.core import security
 from jose import jwt, JWTError
+from fastapi.security import OAuth2PasswordBearer
 
 router = APIRouter()
 
