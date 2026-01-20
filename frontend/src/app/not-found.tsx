@@ -21,7 +21,7 @@ export default function NotFound() {
                 <Spline 
                     className="w-full h-full"
                     // Usamos el robot estilo Apple que se centra bien
-                    scene="https://prod.spline.design/pE91Q2y8K5e98wEw/scene.splinecode" 
+                    scene="https://prod.spline.design/OSrYM4O-EhnULObM/scene.splinecode" 
                 />
                 
                 {/* Degradado inferior para suavizar el corte con el texto */}
