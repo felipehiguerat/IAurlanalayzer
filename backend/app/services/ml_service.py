@@ -5,16 +5,35 @@ class MLService:
     def __init__(self):
         # "Bolsa de palabras" - Palabras clave para clasificación
         self.hot_keywords = {
-            "precio", "comprar", "oferta", "demo", "contacto", "venta", 
-            "servicio", "solución", "profesional", "cotización", "business", 
-            "enterprise", "pricing", "buy", "software", "plataforma", "cliente",
-            "mantenimiento", "consultoría", "soporte"
+            # Negocios y Ventas
+    "precio", "comprar", "oferta", "demo", "contacto", "venta", "servicio", 
+    "solución", "profesional", "cotización", "business", "enterprise", "pricing", 
+    "buy", "software", "plataforma", "plattform", "client", "customer", "mantenimiento", 
+    "consultoría", "soporte", "support", "b2b", "roi", "leads", "sales", "ventas",
+    
+    # Tecnología e IA (Tu nicho principal)
+    "ai", "ia", "artificial intelligence", "inteligencia artificial", "machine learning", 
+    "ml", "cloud", "nube", "saas", "api", "infrastructure", "infraestructura", 
+    "automation", "automatización", "data", "analytics", "dashboard", "framework", 
+    "engine", "workflow", "scalability", "escalabilidad", "devops", "security", "cybersecurity",
+    
+    # Intención de Acción
+    "get started", "empezar", "probar gratis", "free trial", "book a call", 
+    "schedule", "agendar", "demo", "request", "solicitar", "partners", "aliados"
         }
         
         self.cold_keywords = {
-            "blog", "noticia", "artículo", "personal", "hobby", "juego", 
-            "wiki", "foro", "curiosidad", "opinión", "vlog", "social",
-            "música", "entretenimiento", "gratis"
+           # Informativo / Entretenimiento
+    "blog", "noticia", "news", "artículo", "article", "personal", "hobby", "juego", 
+    "game", "wiki", "foro", "forum", "curiosidad", "opinión", "vlog", "social",
+    "música", "music", "entretenimiento", "entertainment", "gratis", "free", 
+    "tutorial", "guía", "guide", "review", "reseña", "receta", "recipe",
+    
+    # No comerciales / No escalables
+    "blog", "fan", "comunidad", "community", "asociación", "foundation", 
+    "charity", "donar", "donate", "non-profit", "sin fines de lucro", 
+    "bakery", "panadería", "coffee", "cafetería", "travel", "viajes", 
+    "lifestyle", "estilo de vida", "vlog", "diario", "podcast", "youtube"
         }
 
     def _preprocess(self, text: str) -> List[str]:
@@ -26,39 +45,43 @@ class MLService:
         tokens = re.findall(r'\b\w+\b', text)
         return tokens
 
-    def classify_lead(self, title: str, description: str) -> Dict[str, any]:
-        """
-        Clasifica un lead como 'Hot' o 'Cold' usando un enfoque de bolsa de palabras.
-        """
-        combined_text = f"{title or ''} {description or ''}"
-        tokens = self._preprocess(combined_text)
-        
-        # Enfoque Bag of Words: contar ocurrencias de palabras clave
-        hot_matches = [token for token in tokens if token in self.hot_keywords]
-        cold_matches = [token for token in tokens if token in self.cold_keywords]
-        
-        hot_score = len(hot_matches)
-        cold_score = len(cold_matches)
-        
-        # Margen de decisión
-        score = hot_score - cold_score
-        
-        if score > 0:
-            prediction = "Hot"
-        elif score < 0:
-            prediction = "Cold"
-        else:
-            # Si hay un empate o no hay palabras clave, usamos una lógica por defecto
-            # Podríamos expandir esto luego con modelos más complejos
-            prediction = "Neutral"
-            
-        return {
-            "status": prediction,
-            "score": score,
-            "analysis": {
-                "hot_hits": list(set(hot_matches)),
-                "cold_hits": list(set(cold_matches)),
-                "total_hot": hot_score,
-                "total_cold": cold_score
-            }
+   def classify_lead(self, title: str, description: str) -> Dict[str, any]:
+    """
+    Clasifica un lead calculando un score normalizado y determinando su estado.
+    """
+    # 1. Preparación de datos
+    text = f"{title or ''} {description or ''}"
+    tokens = self._preprocess(text)
+    
+    # 2. Identificación de señales (conceptos únicos)
+    hot_hits = list(set(t for t in tokens if t in self.hot_keywords))
+    cold_hits = list(set(t for t in tokens if t in self.cold_keywords))
+
+    # 3. Cálculo de Score (Lógica de Pesos)
+    # Empezamos en 0.4 (un Warm base)
+    # Cada palabra Hot suma 0.2 | Cada palabra Cold resta 0.15
+    base_score = 0.4 
+    calculated_score = base_score + (len(hot_hits) * 0.2) - (len(cold_hits) * 0.15)
+    
+    # Normalizamos el score entre 0.1 y 0.99 para el frontend
+    final_score = max(0.1, min(0.99, calculated_score))
+
+    # 4. Determinación de Status basado en el score final
+    if final_score >= 0.7:
+        status = "hot"
+    elif final_score <= 0.3:
+        status = "cold"
+    else:
+        status = "warm"
+
+    return {
+        "status": status,
+        "ml_score": final_score,
+        "ml_analysis": {
+            "hot_hits": hot_hits,
+            "cold_hits": cold_hits,
+            "total_hot": len(hot_hits),
+            "total_cold": len(cold_hits),
+            "reasoning": f"Score of {final_score:.2f} based on {len(hot_hits)} hot and {len(cold_hits)} cold signals."
         }
+    }
