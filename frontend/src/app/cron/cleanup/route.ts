@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     // return new Response('Unauthorized', { status: 401 });
   }
 
-  const RENDER_BACKEND_URL = "https://tu-backend-en-render.com/api/v1/admin/cleanup";
+  const RENDER_BACKEND_URL = "https://iaurlanalayzer.onrender.com/api/v1/admin/admin/cleanup";
 
   try {
     const response = await fetch(RENDER_BACKEND_URL, {
