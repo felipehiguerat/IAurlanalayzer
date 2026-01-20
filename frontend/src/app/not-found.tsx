@@ -3,77 +3,94 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
-// Importamos la herramienta 3D
 import Spline from '@splinetool/react-spline';
 
 export default function NotFound() {
     const router = useRouter();
 
     return (
-        <div className="relative w-full h-screen bg-[#0B1121] overflow-hidden flex flex-col lg:flex-row items-center justify-center">
+        // min-h-screen asegura que cubra todo el alto en móviles, flex-col apila verticalmente
+        <div className="min-h-screen w-full bg-[#0B1121] flex flex-col relative overflow-x-hidden">
             
-            {/* 1. Fondo decorativo sutil */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px]" />
+            {/* 
+               1. SECCIÓN 3D (ARRIBA) 
+               - Mobile: h-[45vh] (45% de la pantalla)
+               - Desktop: md:h-[60vh] (60% de la pantalla)
+            */}
+            <div className="w-full h-[45vh] md:h-[60vh] relative z-0">
+                <Spline 
+                    className="w-full h-full"
+                    // Usamos el robot estilo Apple que se centra bien
+                    scene="https://prod.spline.design/pE91Q2y8K5e98wEw/scene.splinecode" 
+                />
+                
+                {/* Degradado inferior para suavizar el corte con el texto */}
+                <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#0B1121] via-[#0B1121]/80 to-transparent pointer-events-none" />
+                
+                {/* Parche para tapar logo de Spline en la esquina */}
+                <div className="absolute bottom-2 right-2 w-32 h-10 bg-[#0B1121] z-20 pointer-events-none" />
             </div>
 
-            {/* 2. Sección de TEXTO (Izquierda) */}
-            <div className="relative z-10 flex-1 flex flex-col items-center lg:items-start text-center lg:text-left p-8 md:p-16 max-w-2xl">
+            {/* 
+               2. SECCIÓN TEXTO (ABAJO)
+               - flex-1: Ocupa el espacio restante
+               - -mt-12: Sube un poco para integrarse con el degradado del robot
+            */}
+            <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-start text-center px-6 -mt-12 md:-mt-16 pb-10">
                 
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-md">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                    <span className="text-xs font-mono text-slate-300 tracking-widest uppercase">System Offline</span>
+                {/* Badge Offline */}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-4 backdrop-blur-md shadow-lg">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                    </span>
+                    <span className="text-[10px] md:text-xs font-mono text-slate-300 tracking-widest uppercase font-bold">
+                        Demo Mode
+                    </span>
                 </div>
 
-                <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-500 mb-6 tracking-tight">
-                    404 Error
+                {/* Título Responsivo */}
+                <h1 className="text-5xl md:text-8xl font-black text-white mb-2 tracking-tighter drop-shadow-2xl">
+                    404
                 </h1>
                 
-                <h2 className="text-2xl md:text-3xl font-bold text-emerald-400 mb-6">
+                <h2 className="text-lg md:text-3xl font-bold text-emerald-400 mb-4 tracking-wide uppercase">
                     Intelligence Not Found
                 </h2>
 
-                <p className="text-slate-400 text-lg mb-10 leading-relaxed max-w-md">
-                    Parece que has llegado al límite de la simulación. <br/>
-                    El módulo que buscas es solo una demostración visual ("Mockup") y no existe en este servidor.
+                <p className="text-slate-400 text-sm md:text-lg mb-8 leading-relaxed max-w-md mx-auto">
+                    Has llegado al límite de la simulación. <br className="hidden md:block"/>
+                    Esta página es solo una demostración visual.
                 </p>
 
-                {/* Botones */}
-                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                {/* Botones Responsivos */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm mx-auto">
+                    {/* Botón Volver */}
                     <button 
                         onClick={() => router.back()}
-                        className="px-8 py-4 rounded-xl border border-white/10 text-white font-bold hover:bg-white/5 transition-all flex items-center justify-center gap-3 group backdrop-blur-sm"
+                        className="w-full sm:w-auto flex-1 py-3 px-6 rounded-xl border border-white/10 text-slate-300 font-bold text-sm md:text-base hover:bg-white/5 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-95"
                     >
-                        <Icon name="arrow_back" className="group-hover:-translate-x-1 transition-transform" />
-                        <span>Go Back</span>
+                        <Icon name="arrow_back" className="text-lg" />
+                        Go Back
                     </button>
 
+                    {/* Botón Dashboard */}
                     <Link 
                         href="/dashboard"
-                        className="px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold hover:shadow-lg hover:shadow-emerald-500/25 transition-all flex items-center justify-center gap-3 group"
+                        className="w-full sm:w-auto flex-1 py-3 px-6 rounded-xl bg-emerald-500 text-white font-bold text-sm md:text-base hover:bg-emerald-400 shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 active:scale-95"
                     >
-                        <span>Dashboard</span>
-                        <Icon name="dashboard" className="group-hover:rotate-12 transition-transform" />
+                        Dashboard
+                        <Icon name="dashboard" className="text-lg" />
                     </Link>
                 </div>
-            </div>
 
-            {/* 3. Sección 3D (Derecha) - EL ROBOT */}
-            <div className="flex-1 w-full h-[50vh] lg:h-full relative lg:absolute lg:right-0 lg:top-0 z-0">
-                {/* 
-                   NOTA: Esta es una escena pública de Spline de un Robot. 
-                   Puedes cambiar la URL 'scene' por cualquier otra de la comunidad de Spline.
-                */}
-                <Spline 
-                    className="w-full h-full"
-                    scene="https://prod.spline.design/OSrYM4O-EhnULObM/scene.splinecode" 
-                />
-                
-                {/* Capa para ocultar el logo de Spline si aparece abajo a la derecha */}
-                <div className="absolute bottom-4 right-4 w-32 h-10 bg-[#0B1121] z-20 pointer-events-none" />
+                {/* Footer pequeño */}
+                <div className="mt-auto pt-8 opacity-30">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500">
+                        LeadGen AI • v1.0.0
+                    </p>
+                </div>
             </div>
-
         </div>
     );
 }
