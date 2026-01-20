@@ -13,16 +13,20 @@ import asyncio
 
 from app.services.ml_service import MLService
 from app.schemas.leads import BulkURLExtractRequest, BulkExtractResponse
-from app.api.v1.auth import get_current_user
+# Importamos la seguridad para obtener el usuario real
+from app.api.auth import get_current_user
 
 router = APIRouter()
 ml_service = MLService()
 
 @router.post("/extract")
-async def extract_lead(url: str = Body(..., embed=True),  db = Depends(get_mongo_db),current_user = Depends(get_current_user) ):
+async def extract_lead(
+    url: str = Body(..., embed=True), 
+    db = Depends(get_mongo_db),
+    current_user = Depends(get_current_user)
+):
     """
-    Scrapea una URL, la clasifica con NLP y la guarda en MongoDB 
-    vinculada al ID real del usuario en Postgres.
+    Scrapea una URL, la clasifica con NLP y la guarda en MongoDB.
     """
     async with ScraperService() as scraper:
         result = await scraper.scrape_url(url)
@@ -30,7 +34,7 @@ async def extract_lead(url: str = Body(..., embed=True),  db = Depends(get_mongo
         if "error" in result:
             raise HTTPException(status_code=400, detail=result["error"])
         
-        # Clasificación con ML
+        # Clasificación con ML (Bag of Words)
         title = result.get("title", "")
         description = result.get("description", "")
         classification = ml_service.classify_lead(title, description)
@@ -40,14 +44,15 @@ async def extract_lead(url: str = Body(..., embed=True),  db = Depends(get_mongo
             "url": url,
             "title": title,
             "description": description,
-            # IMPORTANTE: Ahora el owner_id es el ID real de Neon
-            "owner_id": current_user.id, 
+            "owner_id": current_user.id, # ID Real de Postgres
             "content": {
                 "h1s": result.get("h1s")
             },
+            # --- CORRECCIÓN AQUÍ ---
             "status": classification["status"],
-            "ml_score": classification["score"],
-            "ml_analysis": classification["analysis"],
+            "ml_score": classification["ml_score"],      # Antes era ["score"]
+            "ml_analysis": classification["ml_analysis"],# Antes era ["analysis"]
+            # -----------------------
             "created_at": datetime.utcnow()
         }
         
@@ -59,13 +64,16 @@ async def extract_lead(url: str = Body(..., embed=True),  db = Depends(get_mongo
         
         return lead_data
 
-
 @router.get("/")
-async def list_leads(db = Depends(get_mongo_db), current_user = Depends(get_current_user)):
+async def list_leads(
+    db = Depends(get_mongo_db), 
+    current_user = Depends(get_current_user)
+):
     """
-    Lista todos los leads guardados en MongoDB.
+    Lista todos los leads guardados en MongoDB que pertenecen al usuario.
     """
     leads = []
+    # Filtramos por owner_id
     cursor = db.leads.find({"owner_id": current_user.id}).sort("created_at", -1)
     async for document in cursor:
         document["_id"] = str(document["_id"])
@@ -75,69 +83,76 @@ async def list_leads(db = Depends(get_mongo_db), current_user = Depends(get_curr
 @router.get("/{lead_id}")
 async def get_lead(
     lead_id: str, 
-    db = Depends(get_mongo_db), 
-    current_user = Depends(get_current_user) # Obtenemos el usuario autenticado
+    db = Depends(get_mongo_db),
+    current_user = Depends(get_current_user)
 ):
     """
-    Obtiene el detalle de un lead específico, validando que pertenezca 
-    al usuario actual o sea un dato de ejemplo.
+    Obtiene el detalle de un lead (real o de ejemplo).
     """
-    # 1. Verificar si es un ID de ejemplo (Estos son públicos para todos)
+    # 1. Verificar si es un ID de ejemplo
     if lead_id.startswith("sample-"):
         sample = next((item for item in SAMPLE_LEADS if item["_id"] == lead_id), None)
         if not sample:
             raise HTTPException(status_code=404, detail="Sample lead not found")
         return sample
 
-    # 2. Validar formato de ID de MongoDB
+    # 2. Si no es ejemplo, procedemos con la lógica normal
     if not ObjectId.is_valid(lead_id):
         raise HTTPException(status_code=400, detail="Invalid Lead ID format")
     
-
+    # Buscamos asegurando que pertenezca al usuario
     lead = await db.leads.find_one({
         "_id": ObjectId(lead_id),
-        "owner_id": current_user.id  # <-- SEGURIDAD: Solo lo encuentra si le pertenece
+        "owner_id": current_user.id
     })
     
     if not lead:
-        
-        raise HTTPException(status_code=404, detail="Lead not found or unauthorized")
+        raise HTTPException(status_code=404, detail="Lead not found")
     
-    # 4. Preparar respuesta
     lead["_id"] = str(lead["_id"])
     return lead
 
     
 @router.delete("/{lead_id}")
-async def delete_lead(lead_id: str, db = Depends(get_mongo_db)):
+async def delete_lead(
+    lead_id: str, 
+    db = Depends(get_mongo_db),
+    current_user = Depends(get_current_user)
+):
     """
     Elimina un lead de MongoDB.
     """
     if not ObjectId.is_valid(lead_id):
         raise HTTPException(status_code=400, detail="Invalid Lead ID format")
     
-    result = await db.leads.delete_one({"_id": ObjectId(lead_id)})
+    # Solo borramos si pertenece al usuario
+    result = await db.leads.delete_one({
+        "_id": ObjectId(lead_id),
+        "owner_id": current_user.id
+    })
+    
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Lead not found")
     
     return {"message": "Lead deleted successfully"}
 
 @router.post("/bulk-import")
-async def bulk_import_leads(request: BulkURLExtractRequest, db = Depends(get_mongo_db)):
+async def bulk_import_leads(
+    request: BulkURLExtractRequest, 
+    db = Depends(get_mongo_db),
+    current_user = Depends(get_current_user)
+):
     """
     Importa múltiples URLs desde CSV de forma optimizada.
-    Procesa las URLs en lotes para mejor rendimiento.
     """
     results = []
     errors = []
     successful = 0
     failed = 0
     
-    # Procesar URLs en lotes de 5 para evitar sobrecarga
     batch_size = 5
     
     async def process_url(url: str, owner_id: int):
-        """Procesa una URL individual"""
         try:
             async with ScraperService() as scraper:
                 result = await scraper.scrape_url(url)
@@ -145,12 +160,10 @@ async def bulk_import_leads(request: BulkURLExtractRequest, db = Depends(get_mon
                 if "error" in result:
                     return {"success": False, "url": url, "error": result["error"]}
                 
-                # Clasificación con ML
                 title = result.get("title", "")
                 description = result.get("description", "")
                 classification = ml_service.classify_lead(title, description)
                 
-                # Crear objeto para Mongo
                 lead_data = {
                     "url": url,
                     "title": title,
@@ -159,13 +172,14 @@ async def bulk_import_leads(request: BulkURLExtractRequest, db = Depends(get_mon
                     "content": {
                         "h1s": result.get("h1s")
                     },
+                    # --- CORRECCIÓN TAMBIÉN AQUÍ ---
                     "status": classification["status"],
-                    "ml_score": classification["score"],
-                    "ml_analysis": classification["analysis"],
+                    "ml_score": classification["ml_score"],      # Corregido
+                    "ml_analysis": classification["ml_analysis"],# Corregido
+                    # -------------------------------
                     "created_at": datetime.utcnow()
                 }
                 
-                # Guardar en MongoDB
                 new_lead = await db.leads.insert_one(lead_data)
                 lead_data["_id"] = str(new_lead.inserted_id)
                 
@@ -173,10 +187,10 @@ async def bulk_import_leads(request: BulkURLExtractRequest, db = Depends(get_mon
         except Exception as e:
             return {"success": False, "url": url, "error": str(e)}
     
-    # Procesar URLs en lotes
+    # Procesar URLs en lotes usando el ID del usuario actual
     for i in range(0, len(request.urls), batch_size):
         batch = request.urls[i:i + batch_size]
-        tasks = [process_url(url, request.owner_id) for url in batch]
+        tasks = [process_url(url, current_user.id) for url in batch]
         batch_results = await asyncio.gather(*tasks)
         
         for result in batch_results:
@@ -196,13 +210,16 @@ async def bulk_import_leads(request: BulkURLExtractRequest, db = Depends(get_mon
     )
 
 @router.get("/export/csv")
-async def export_leads_csv(db = Depends(get_mongo_db)):
+async def export_leads_csv(
+    db = Depends(get_mongo_db),
+    current_user = Depends(get_current_user)
+):
     """
-    Exporta todos los leads a formato CSV.
+    Exporta todos los leads del usuario a formato CSV.
     """
-    # Obtener todos los leads
     leads = []
-    cursor = db.leads.find().sort("created_at", -1)
+    # Filtramos por usuario
+    cursor = db.leads.find({"owner_id": current_user.id}).sort("created_at", -1)
     async for document in cursor:
         document["_id"] = str(document["_id"])
         leads.append(document)
@@ -210,10 +227,8 @@ async def export_leads_csv(db = Depends(get_mongo_db)):
     if not leads:
         raise HTTPException(status_code=404, detail="No leads found to export")
     
-    # Crear CSV en memoria
     output = io.StringIO()
     
-    # Definir columnas del CSV
     fieldnames = [
         "_id",
         "url",
@@ -229,12 +244,10 @@ async def export_leads_csv(db = Depends(get_mongo_db)):
     writer.writeheader()
     
     for lead in leads:
-        # Formatear fecha para CSV
         if isinstance(lead.get("created_at"), datetime):
             lead["created_at"] = lead["created_at"].isoformat()
         writer.writerow(lead)
     
-    # Preparar respuesta
     output.seek(0)
     
     return StreamingResponse(
@@ -244,4 +257,3 @@ async def export_leads_csv(db = Depends(get_mongo_db)):
             "Content-Disposition": f"attachment; filename=leads_export_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
         }
     )
-
