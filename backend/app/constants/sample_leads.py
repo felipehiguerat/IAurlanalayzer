@@ -7,7 +7,7 @@ SAMPLE_LEADS = [
         "title": "OpenAI | Artificial Intelligence Research",
         "description": "OpenAI is an AI research and deployment company. Our mission is to ensure that artificial intelligence benefits all of humanity.",
         "owner_id": 1,
-        "status": "HOT LEAD",
+        "status": "HOT ",
         "ml_score": 95,
         "ml_analysis": {
             "hot_hits": ["gpt-4", "neural networks", "llm", "api integration", "scalability"],
@@ -23,7 +23,7 @@ SAMPLE_LEADS = [
         "title": "Stripe | Payment Infrastructure for the Internet",
         "description": "Millions of companies of all sizes use Stripe online and in person to accept payments, send payouts, and manage their businesses online.",
         "owner_id": 1,
-        "status": "WARM LEAD",
+        "status": "WARM ",
         "ml_score": 72,
         "ml_analysis": {
             "hot_hits": ["payments", "fintech", "e-commerce"],
@@ -39,7 +39,7 @@ SAMPLE_LEADS = [
         "title": "The Artisan Bakery",
         "description": "Homemade bread, pastries and coffee served daily in our cozy local shop.",
         "owner_id": 1,
-        "status": "NEUTRAL",
+        "status": "COLD",
         "ml_score": 10,
         "ml_analysis": {
             "hot_hits": [],
@@ -55,7 +55,7 @@ SAMPLE_LEADS = [
         "title": "DataCamp - Learn Data Science Online",
         "description": "Learn the data skills you need online at your own pace—from non-coding essentials to data science and machine learning.",
         "owner_id": 1,
-        "status": "HOT LEAD",
+        "status": "HOT",
         "ml_score": 88,
         "ml_analysis": {
             "hot_hits": ["python", "data science", "online learning", "r programming"],
@@ -71,7 +71,7 @@ SAMPLE_LEADS = [
         "title": "My Adventure Blog",
         "description": "Follow my journey as I travel across Southeast Asia with just a backpack and a camera.",
         "owner_id": 1,
-        "status": "WARM LEAD",
+        "status": "neutral",
         "ml_score": 40,
         "ml_analysis": {
             "hot_hits": ["wordpress"],
