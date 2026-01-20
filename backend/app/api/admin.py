@@ -26,7 +26,7 @@ async def cleanup_old_data(
 
     # 2. Definir ventana de tiempo (Ejemplo: 24 horas)
     # Cualquier usuario creado antes de esto será borrado
-    threshold = datetime.utcnow() - timedelta(hours=24)
+    threshold = datetime.utcnow() - timedelta(minutes=1)
 
     try:
         # 3. Obtener usuarios viejos de Neon
