@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.db.session_sql import get_db, engine # Importamos engine directamente de aquí
 from app.db.session_mongo import get_mongo_db
 from app.models import sql_models
+from app.api import admin
 
 # 1. Definir la aplicación
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -62,3 +63,4 @@ async def health_check(db = Depends(get_db)):
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(leads.router, prefix="/api/v1/leads", tags=["leads"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
