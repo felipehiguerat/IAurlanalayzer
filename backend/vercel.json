@@ -1,14 +1,11 @@
 {
-  "builds": [
+  "crons": [
     {
-      "src": "api/index.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "api/index.py"
+      "path": "https://tu-backend-en-render.com/api/v1/admin/cleanup",
+      "schedule": "0 0 * * *",
+      "headers": {
+        "x-admin-token": "secret_key"
+      }
     }
   ]
 }
